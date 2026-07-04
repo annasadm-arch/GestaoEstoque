@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Global SCM | Supply Chain Intelligence Platform</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg-0:#0a0e1a; --bg-1:#111827; --bg-2:#1f2937; --bg-3:#374151;
+  --accent:#06b6d4; --accent-2:#3b82f6; --accent-3:#10b981; --accent-4:#f59e0b;
+  --danger:#ef4444; --warn:#f59e0b; --ok:#10b981;
+  --text:#e5e7eb; --text-dim:#9ca3af; --text-mute:#6b7280;
+  --border:#1f2937; --border-2:#374151;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter','Segoe UI',sans-serif}
+body{background:var(--bg-0);color:var(--text);display:flex;min-height:100vh;font-size:13px}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg-1)}
+::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:4px}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--bg-1);border-right:1px solid var(--border);position:fixed;height:100vh;display:flex;flex-direction:column;z-index:100}
+.brand{padding:22px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.brand-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:10px;display:grid;place-items:center;font-weight:800;color:#fff;font-size:16px;box-shadow:0 4px 12px rgba(6,182,212,.3)}
+.brand h1{font-size:15px;font-weight:700;letter-spacing:.5px}
+.brand p{font-size:10px;color:var(--text-mute);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+.nav{flex:1;padding:16px 10px;overflow-y:auto}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-mute);padding:14px 12px 8px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--text-dim);font-size:13px;margin-bottom:2px;transition:all .2s;border-left:2px solid transparent}
+.nav-item:hover{background:var(--bg-2);color:var(--text)}
+.nav-item.active{background:linear-gradient(90deg,rgba(6,182,212,.1),transparent);color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.nav-item .ico{font-size:16px;width:20px;text-align:center}
+.nav-item .badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600}
+.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-mute)}
+.sidebar-footer .status{display:flex;align-items:center;gap:8px;margin-top:4px}
+.sidebar-footer .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.5}}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--bg-1);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
+.search{flex:1;max-width:420px;position:relative}
+.search input{width:100%;background:var(--bg-2);border:1px solid var(--border-2);color:var(--text);padding:9px 14px 9px 38px;border-radius:8px;font-size:13px;outline:none}
+.search::before{content:"🔍";position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.5}
+.top-actions{display:flex;align-items:center;gap:14px;margin-left:auto}
+.currency-switch{display:flex;background:var(--bg-2);border-radius:6px;padding:2px;font-size:11px}
+.currency-switch button{background:transparent;border:none;color:var(--text-dim);padding:5px 10px;border-radius:4px;cursor:pointer;font-weight:600}
+.currency-switch button.active{background:var(--accent);color:#000}
+.user{display:flex;align-items:center;gap:10px;padding:4px 12px;background:var(--bg-2);border-radius:20px}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px}
+.user-info{font-size:11px}
+.user-info strong{display:block;color:var(--text)}
+.user-info span{color:var(--text-mute)}
+
+.content{flex:1;padding:24px 28px;overflow-y:auto}
+.page{display:none;animation:fade .3s}
+.page.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.page-head h2{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.page-head .sub{font-size:12px;color:var(--text-mute);margin-top:3px}
+.page-head .actions{display:flex;gap:8px}
+
+/* BUTTONS */
+.btn{padding:8px 14px;border-radius:7px;border:1px solid var(--border-2);background:var(--bg-2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.btn:hover{background:var(--bg-3)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;color:#fff}
+.btn.primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(6,182,212,.35)}
+.btn.danger{color:#fca5a5;border-color:rgba(239,68,68,.4)}
+.btn.danger:hover{background:rgba(239,68,68,.15)}
+
+/* KPI CARDS */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--bg-1);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent)}
+.kpi.blue::before{background:var(--accent-2)}
+.kpi.green::before{background:var(--accent-3)}
+.kpi.amber::before{background:var(--accent-4)}
+.kpi.red::before{background:var(--danger)}
+.kpi-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.kpi-label{font-size:11px;color:var(--text-mute);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.kpi-ico{font-size:16px;opacity:.5}
+.kpi-value{font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}
+.kpi-trend{font-size:11px;display:flex;align-items:center;gap:4px}
+.kpi-trend.up{color:var(--ok)}
+.kpi-trend.down{color:var(--danger)}
+.kpi-trend.flat{color:var(--text-mute)}
+.kpi-meta{font-size:10px;color:var(--text-mute);margin-top:4px}
+
+/* GRIDS */
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:1100px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+.panel{background:var(--bg-1);border:1px solid var(--border);border-radius:12px;padding:18px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.panel-head h3{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.panel-head h3 .tag{font-size:9px;background:var(--bg-2);color:var(--text-mute);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:1px}
+.panel-head .menu{color:var(--text-mute);cursor:pointer;padding:4px 8px;border-radius:4px}
+.panel-head .menu:hover{background:var(--bg-2)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--bg-2);padding:11px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-mute);font-weight:600;white-space:nowrap;border-bottom:1px solid var(--border)}
+tbody td{padding:12px;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:var(--bg-2)}
+tbody tr:last-child td{border-bottom:none}
+
+/* STATUS & BADGES */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap}
+.pill.ok{background:rgba(16,185,129,.15);color:#6ee7b7}
+.pill.warn{background:rgba(245,158,11,.15);color:#fcd34d}
+.pill.err{background:rgba(239,68,68,.15);color:#fca5a5}
+.pill.info{background:rgba(59,130,246,.15);color:#93c5fd}
+.pill.mute{background:var(--bg-2);color:var(--text-dim)}
+
+/* MILESTONES */
+.milestones{display:flex;gap:2px;align-items:center}
+.ms{flex:1;height:4px;border-radius:2px;background:var(--bg-3);position:relative}
+.ms.done{background:var(--ok)}
+.ms.active{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.ms.late{background:var(--danger)}
+.ms-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--text-mute);margin-top:4px;min-width:220px}
+
+/* ROUTE CARD */
+.route{display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;background:var(--bg-0);border:1px solid var(--border);margin-bottom:10px}
+.route .ports{display:flex;align-items:center;gap:10px;flex:1}
+.port{display:flex;flex-direction:column;gap:2px}
+.port .code{font-weight:700;font-size:14px;color:var(--accent);letter-spacing:1px}
+.port .name{font-size:10px;color:var(--text-mute)}
+.route-line{flex:1;height:2px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent) var(--p),var(--bg-3) var(--p),var(--bg-3) 100%);position:relative;margin:0 10px}
+.route-line::before{content:"✈";position:absolute;top:-9px;left:var(--p);transform:translateX(-50%);font-size:14px;color:var(--accent)}
+.route-meta{display:flex;flex-direction:column;gap:2px;font-size:11px;text-align:right}
+.route-meta strong{color:var(--text);font-size:13px}
+.route-meta span{color:var(--text-mute)}
+
+/* CARRIER */
+.carrier{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;background:var(--bg-0);border:1px solid var(--border);margin-bottom:8px}
+.carrier-logo{width:42px;height:42px;border-radius:8px;background:var(--bg-2);display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--accent);flex-shrink:0}
+.carrier-info{flex:1;min-width:0}
+.carrier-info h4{font-size:13px;font-weight:600}
+.carrier-info p{font-size:10px;color:var(--text-mute);margin-top:1px}
+.carrier-stats{display:flex;gap:14px;font-size:11px}
+.carrier-stats div{display:flex;flex-direction:column}
+.carrier-stats strong{color:var(--accent);font-weight:700}
+.carrier-stats span{color:var(--text-mute);font-size:9px;text-transform:uppercase}
+
+/* WAREHOUSE */
+.wh{padding:14px;background:var(--bg-0);border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.wh-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.wh-head h4{font-size:13px;font-weight:600}
+.wh-head .code{font-size:10px;color:var(--text-mute);font-family:monospace;letter-spacing:1px}
+.wh-meta{display:flex;gap:16px;font-size:11px;margin-bottom:10px}
+.wh-meta div span{color:var(--text-mute)}
+.wh-bar{height:8px;background:var(--bg-2);border-radius:4px;overflow:hidden}
+.wh-bar-fill{height:100%;border-radius:4px;transition:width .5s}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.form-group label{display:block;font-size:11px;color:var(--text-mute);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:var(--bg-0);border:1px solid var(--border-2);color:var(--text);padding:9px 12px;border-radius:7px;font-size:13px;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:70px;font-family:inherit}
+.form-row{display:flex;gap:8px;margin-top:16px}
+
+/* TOAST */
+.toast{position:fixed;top:20px;right:20px;background:var(--bg-2);border:1px solid var(--accent);padding:14px 20px;border-radius:10px;color:var(--text);font-size:13px;transform:translateX(450px);transition:transform .3s;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:320px}
+.toast.show{transform:translateX(0)}
+.toast.err{border-color:var(--danger)}
+.toast.ok{border-color:var(--ok)}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text-mute);font-size:12px}
+.filter-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{background:var(--bg-2);border:1px solid var(--border-2);color:var(--text);padding:7px 11px;border-radius:6px;font-size:12px;outline:none}
+.tag-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{background:var(--bg-2);color:var(--text-dim);padding:2px 8px;border-radius:4px;font-size:10px;font-family:monospace}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal-bg.show{display:flex}
+.modal{background:var(--bg-1);border:1px solid var(--border-2);border-radius:14px;padding:24px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto}
+.modal h3{margin-bottom:16px;font-size:16px}
+
+/* ALERTS */
+.alert-item{display:flex;gap:12px;padding:10px;border-radius:8px;background:var(--bg-0);border-left:3px solid var(--warn);margin-bottom:6px;font-size:12px}
+.alert-item.crit{border-left-color:var(--danger)}
+.alert-item .ico{font-size:16px}
+.alert-item strong{display:block;margin-bottom:2px}
+.alert-item .meta{color:var(--text-mute);font-size:10px}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">SC</div>
+    <div>
+      <h1>Global SCM</h1>
+      <p>Intelligence Platform</p>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Operations</div>
+    <div class="nav-item active" data-page="dashboard"><span class="ico">📡</span> Command Center</div>
+    <div class="nav-item" data-page="shipments"><span class="ico">📦</span> Shipments <span class="badge" id="badge-active">0</span></div>
+    <div class="nav-item" data-page="routes"><span class="ico">🗺️</span> Trade Lanes</div>
+    <div class="nav-item" data-page="carriers"><span class="ico">🚢</span> Carriers & Fleet</div>
+    <div class="nav-item" data-page="warehouses"><span class="ico">🏭</span> Warehouses</div>
+
+    <div class="nav-label">Compliance</div>
+    <div class="nav-item" data-page="docs"><span class="ico">📄</span> Documentation</div>
+    <div class="nav-item" data-page="analytics"><span class="ico">📊</span> Analytics & ESG</div>
+
+    <div class="nav-label">Actions</div>
+    <div class="nav-item" data-page="new"><span class="ico">➕</span> New Shipment</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div style="font-weight:600;color:var(--text);margin-bottom:2px">System Status</div>
+    <div class="status"><span class="dot"></span> All systems operational</div>
+    <div style="margin-top:8px;font-size:10px">Last sync: <span id="lastSync">--</span></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="search"><input id="globalSearch" placeholder="Search by BL, container, port, HS code..."/></div>
+    <div class="top-actions">
+      <div class="currency-switch" id="currencySwitch">
+        <button class="active" data-ccy="USD">USD</button>
+        <button data-ccy="EUR">EUR</button>
+        <button data-ccy="BRL">BRL</button>
+      </div>
+      <div class="btn" onclick="exportData()">📥 Export</div>
+      <div class="user">
+        <div class="avatar">OP</div>
+        <div class="user-info"><strong>Ops Team</strong><span>Global Control Tower</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-head">
+        <div>
+          <h2>Supply Chain Command Center</h2>
+          <div class="sub">Global visibility across 5 continents, 24 ports, 8 carriers</div>
+        </div>
+        <div class="actions">
+          <button class="btn" onclick="syncData()">🔄 Sync</button>
+          <button class="btn primary" onclick="goto('new')">+ New Shipment</button>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-head"><div class="kpi-label">Active Shipments</div><div class="kpi-ico">📦</div></div>
+          <div class="kpi-value" id="kpiActive">0</div>
+          <div class="kpi-trend up">▲ 12% vs last month</div>
+          <div class="kpi-meta">In transit across all lanes</div>
+        </div>
+        <div class="kpi blue">
+          <div class="kpi-head"><div class="kpi-label">Total TEUs</div><div class="kpi-ico">🚢</div></div>
+          <div class="kpi-value" id="kpiTEU">0</div>
+          <div class="kpi-trend up">▲ 8.4%</div>
+          <div class="kpi-meta">Container volume YTD</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-head"><div class="kpi-label">OTIF Score</div><div class="kpi-ico">🎯</div></div>
+          <div class="kpi-value" id="kpiOTIF">0%</div>
+          <div class="kpi-trend up">▲ 2.1 pts</div>
+          <div class="kpi-meta">On-Time In-Full delivery</div>
+        </div>
+        <div class="kpi amber">
+          <div class="kpi-head"><div class="kpi-label">Avg Transit Time</div><div class="kpi-ico">⏱️</div></div>
+          <div class="kpi-value" id="kpiTransit">0 d</div>
+          <div class="kpi-trend down">▼ 1.3 days</div>
+          <div class="kpi-meta">Ocean + Air combined</div>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-head"><div class="kpi-label">Freight Cost</div><div class="kpi-ico">💰</div></div>
+          <div class="kpi-value" id="kpiCost">$0</div>
+          <div class="kpi-trend down">▼ 4.2%</div>
+          <div class="kpi-meta" id="kpiCostMeta">Total spend</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-head"><div class="kpi-label">CO₂ Emissions</div><div class="kpi-ico">🌱</div></div>
+          <div class="kpi-value" id="kpiCO2">0 t</div>
+          <div class="kpi-trend up">▼ 6.8%</div>
+          <div class="kpi-meta">Scope 3 logistics</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Volume by Trade Lane <span class="tag">TEU</span></h3>
+          </div>
+          <canvas id="chartLanes" height="140"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h3>🚨 Live Alerts <span class="tag" id="alertCount">0</span></h3>
+          </div>
+          <div id="alertsList"></div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="panel">
+          <div class="panel-head"><h3>Transport Mode Split</h3></div>
+          <canvas id="chartMode" height="160"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Top Carriers</h3></div>
+          <div id="topCarriers"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Incoterm Distribution</h3></div>
+          <canvas id="chartInco" height="160"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHIPMENTS -->
+    <section class="page" id="page-shipments">
+      <div class="page-head">
+        <div><h2>Shipments</h2><div class="sub">End-to-end tracking with milestone visibility</div></div>
+        <button class="btn primary" onclick="goto('new')">+ New Shipment</button>
+      </div>
+      <div class="panel">
+        <div class="filter-bar">
+          <select id="fltStatus">
+            <option value="">All statuses</option>
+            <option>Booked</option><option>Picked Up</option><option>In Transit</option>
+            <option>Customs Hold</option><option>Delivered</option><option>Delayed</option>
+          </select>
+          <select id="fltMode">
+            <option value="">All modes</option>
+            <option>Ocean FCL</option><option>Ocean LCL</option><option>Air Freight</option><option>Road</option><option>Rail</option>
+          </select>
+          <select id="fltCarrier"><option value="">All carriers</option></select>
+          <input type="text" id="fltSearch" placeholder="🔍 BL, container, HS code..." style="flex:1;min-width:200px"/>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>BL / Ref</th><th>Route</th><th>Mode</th><th>Carrier</th><th>Incoterm</th>
+              <th>TEU</th><th>Value</th><th>Progress</th><th>ETA</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="tbodyShips"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROUTES -->
+    <section class="page" id="page-routes">
+      <div class="page-head">
+        <div><h2>Trade Lanes</h2><div class="sub">Global corridors with transit time and cost benchmarking</div></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-head"><div class="kpi-label">Active Lanes</div></div><div class="kpi-value" id="kpiLanes">0</div><div class="kpi-meta">Monitored corridors</div></div>
+        <div class="kpi blue"><div class="kpi-head"><div class="kpi-label">Busiest Lane</div></div><div class="kpi-value" id="kpiBusiest">—</div><div class="kpi-meta" id="kpiBusiestMeta"></div></div>
+        <div class="kpi green"><div class="kpi-head"><div class="kpi-label">Avg Cost / TEU</div></div><div class="kpi-value" id="kpiAvgTEU">$0</div><div class="kpi-meta">Freight index</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Active Corridors</h3></div>
+        <div id="routesList"></div>
+      </div>
+    </section>
+
+    <!-- CARRIERS -->
+    <section class="page" id="page-carriers">
+      <div class="page-head">
+        <div><h2>Carriers & Fleet</h2><div class="sub">Performance scoring across ocean, air and land partners</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Carrier Performance</h3></div>
+        <div id="carriersList"></div>
+      </div>
+    </section>
+
+    <!-- WAREHOUSES -->
+    <section class="page" id="page-warehouses">
+      <div class="page-head">
+        <div><h2>Warehouses & DCs</h2><div class="sub">Global distribution centers occupancy & throughput</div></div>
+      </div>
+      <div class="panel">
+        <div id="whList"></div>
+      </div>
+    </section>
+
+    <!-- DOCS -->
+    <section class="page" id="page-docs">
+      <div class="page-head">
+        <div><h2>Documentation & Customs</h2><div class="sub">BL, AWB, Packing Lists, HS Codes compliance</div></div>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Document</th><th>Type</th><th>Shipment</th><th>HS Code</th><th>Issued</th><th>Status</th></tr></thead>
+            <tbody id="tbodyDocs"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="page" id="page-analytics">
+      <div class="page-head">
+        <div><h2>Analytics & ESG</h2><div class="sub">Carbon footprint, cost breakdown and forecast</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h3>CO₂ by Mode (kg per TEU-km)</h3></div><canvas id="chartCO2" height="180"></canvas></div>
+        <div class="panel"><div class="panel-head"><h3>Freight Cost Trend (90d)</h3></div><canvas id="chartTrend" height="180"></canvas></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel"><div class="panel-head"><h3>On-Time Delivery by Carrier</h3></div><canvas id="chartOTIF" height="180"></canvas></div>
+        <div class="panel"><div class="panel-head"><h3>Delay Root Causes</h3></div><canvas id="chartDelay" height="180"></canvas></div>
+      </div>
+    </section>
+
+    <!-- NEW SHIPMENT -->
+    <section class="page" id="page-new">
+      <div class="page-head">
+        <div><h2>Create New Shipment</h2><div class="sub">Book a new movement across the global network</div></div>
+      </div>
+      <div class="panel">
+        <form id="formShip">
+          <div class="form-grid">
+            <div class="form-group"><label>Reference / PO</label><input type="text" id="f-ref" required placeholder="PO-2026-XXXX"/></div>
+            <div class="form-group"><label>Transport Mode</label>
+              <select id="f-mode" required>
+                <option>Ocean FCL</option><option>Ocean LCL</option><option>Air Freight</option><option>Road</option><option>Rail</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Carrier</label><select id="f-carrier" required></select></div>
+            <div class="form-group"><label>Incoterm</label>
+              <select id="f-inco" required>
+                <option>EXW</option><option>FCA</option><option>FOB</option><option>CIF</option><option>DAP</option><option>DDP</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Origin (Port/City)</label><select id="f-origin" required></select></div>
+            <div class="form-group"><label>Destination (Port/City)</label><select id="f-dest" required></select></div>
+            <div class="form-group"><label>TEUs / Pallets</label><input type="number" id="f-teu" min="1" value="1" required/></div>
+            <div class="form-group"><label>Cargo Value (USD)</label><input type="number" id="f-value" min="0" step="100" required/></div>
+            <div class="form-group"><label>Freight Cost (USD)</label><input type="number" id="f-cost" min="0" step="50" required/></div>
+            <div class="form-group"><label>HS Code</label><input type="text" id="f-hs" placeholder="8471.30" required/></div>
+            <div class="form-group"><label>ETD (Departure)</label><input type="date" id="f-etd" required/></div>
+            <div class="form-group"><label>ETA (Arrival)</label><input type="date" id="f-eta" required/></div>
+            <div class="form-group"><label>Cargo Description</label><input type="text" id="f-desc" placeholder="Consumer electronics"/></div>
+            <div class="form-group"><label>Gross Weight (kg)</label><input type="number" id="f-weight" min="0" step="10"/></div>
+          </div>
+          <div class="form-row">
+            <button type="submit" class="btn primary">🚀 Book Shipment</button>
+            <button type="reset" class="btn">Clear</button>
+            <button type="button" class="btn danger" onclick="resetSystem()">🗑️ Reset Data</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+
+<script>
+/* ============ DOMAIN DATA (realistic global logistics) ============ */
+const PORTS = [
+  {code:'SHASIN',name:'Shanghai, CN',country:'CN',region:'Asia'},
+  {code:'SGSIN',name:'Singapore, SG',country:'SG',region:'Asia'},
+  {code:'CNNGB',name:'Ningbo, CN',country:'CN',region:'Asia'},
+  {code:'HKGHKG',name:'Hong Kong, HK',country:'HK',region:'Asia'},
+  {code:'INNSA',name:'Nhava Sheva, IN',country:'IN',region:'Asia'},
+  {code:'NLRTM',name:'Rotterdam, NL',country:'NL',region:'Europe'},
+  {code:'DEHAM',name:'Hamburg, DE',country:'DE',region:'Europe'},
+  {code:'BEANR',name:'Antwerp, BE',country:'BE',region:'Europe'},
+  {code:'GRPIR',name:'Piraeus, GR',country:'GR',region:'Europe'},
+  {code:'USLAX',name:'Los Angeles, US',country:'US',region:'Americas'},
+  {code:'USNYC',name:'New York, US',country:'US',region:'Americas'},
+  {code:'USHOU',name:'Houston, US',country:'US',region:'Americas'},
+  {code:'BRSSZ',name:'Santos, BR',country:'BR',region:'Americas'},
+  {code:'MXMXT',name:'Manzanillo, MX',country:'MX',region:'Americas'},
+  {code:'COCTG',name:'Cartagena, CO',country:'CO',region:'Americas'},
+  {code:'AEJEA',name:'Jebel Ali, AE',country:'AE',region:'MENA'},
+  {code:'ZADUR',name:'Durban, ZA',country:'ZA',region:'Africa'}
+];
+
+const CARRIERS = [
+  {code:'MAEU',name:'Maersk',mode:'Ocean',rating:4.5,onTime:92},
+  {code:'MSCU',name:'MSC',mode:'Ocean',rating:4.2,onTime:88},
+  {code:'CMDU',name:'CMA CGM',mode:'Ocean',rating:4.3,onTime:89},
+  {code:'HLCU',name:'Hapag-Lloyd',mode:'Ocean',rating:4.4,onTime:91},
+  {code:'ONE',name:'ONE Network',mode:'Ocean',rating:4.1,onTime:86},
+  {code:'EGLV',name:'Evergreen',mode:'Ocean',rating:4.0,onTime:85},
+  {code:'DHL',name:'DHL Global Forwarding',mode:'Air',rating:4.7,onTime:95},
+  {code:'KNG',name:'Kuehne+Nagel',mode:'Multi',rating:4.6,onTime:93},
+  {code:'DBS',name:'DB Schenker',mode:'Multi',rating:4.4,onTime:90},
+  {code:'FDX',name:'FedEx Logistics',mode:'Air',rating:4.6,onTime:94}
+];
+
+const MODES = ['Ocean FCL','Ocean LCL','Air Freight','Road','Rail'];
+const INCOTERMS = ['EXW','FCA','FOB','CIF','DAP','DDP'];
+const STATUSES = ['Booked','Picked Up','In Transit','Customs Hold','Delivered','Delayed'];
+const HS_CODES = ['8471.30','8517.62','9401.30','8528.72','8473.30','9504.50','3926.90','8544.42'];
+const DOC_TYPES = ['Bill of Lading','Air Waybill','Commercial Invoice','Packing List','Certificate of Origin','Customs Declaration'];
+
+const FX = { USD:1, EUR:0.92, BRL:5.10 }; // realistic FX rates
+let currentCCY = 'USD';
+
+/* ============ STORAGE ============ */
+const KEY = 'global_scm_shipments_v1';
+const loadShips = () => {
+  let s = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (!s) { s = seedData(); saveShips(s); }
+  return s;
+};
+const saveShips = s => localStorage.setItem(KEY, JSON.stringify(s));
+
+/* ============ SEED REALISTIC DATA ============ */
+function seedData(){
+  const ships = [];
+  const lanes = [
+    {o:'SHASIN',d:'BRSSZ',mode:'Ocean FCL',days:38,cost:4200},
+    {o:'SHASIN',d:'NLRTM',mode:'Ocean FCL',days:32,cost:3100},
+    {o:'SGSIN',d:'USLAX',mode:'Ocean FCL',days:22,cost:2800},
+    {o:'CNNGB',d:'DEHAM',mode:'Ocean FCL',days:34,cost:3300},
+    {o:'HKGHKG',d:'AEJEA',mode:'Ocean FCL',days:12,cost:1500},
+    {o:'SHASIN',d:'USLAX',mode:'Ocean FCL',days:18,cost:2600},
+    {o:'INNSA',d:'BEANR',mode:'Ocean FCL',days:22,cost:2400},
+    {o:'SHASIN',d:'MXMXT',mode:'Ocean FCL',days:26,cost:3600},
+    {o:'SGSIN',d:'ZADUR',mode:'Ocean FCL',days:18,cost:2100},
+    {o:'HKGHKG',d:'GRPIR',mode:'Ocean FCL',days:25,cost:2900},
+    {o:'HKGHKG',d:'USNYC',mode:'Air Freight',days:3,cost:12000},
+    {o:'SHASIN',d:'DEHAM',mode:'Air Freight',days:4,cost:14500},
+    {o:'NLRTM',d:'USNYC',mode:'Ocean FCL',days:14,cost:1800},
+    {o:'BRSSZ',d:'NLRTM',mode:'Ocean FCL',days:18,cost:2100},
+    {o:'MXMXT',d:'DEHAM',mode:'Ocean FCL',days:22,cost:2500}
+  ];
+  let id = 1000;
+  lanes.forEach((l,idx) => {
+    const count = 2 + Math.floor(Math.random()*4);
+    for (let i=0;i<count;i++){
+      const carrier = CARRIERS.filter(c => c.mode===l.mode.split(' ')[0] || c.mode==='Multi')[Math.floor(Math.random()*5)] || CARRIERS[0];
+      const teu = l.mode==='Air Freight' ? 0 : (Math.random()<.4 ? 1 : Math.floor(Math.random()*6)+1);
+      const value = Math.floor(Math.random()*450000)+20000;
+      const cost = l.cost*(teu||1) * (0.85+Math.random()*0.3);
+      const days = l.days * (0.9+Math.random()*0.2);
+      const etd = new Date(Date.now() - Math.random()*30*86400000);
+      const eta = new Date(etd.getTime() + days*86400000);
+      const status = pickStatus(eta);
+      const progress = calcProgress(etd, eta, status);
+      const bl = `MAEU${++id}${Math.floor(Math.random()*999)}`;
+      const container = teu ? `${['MSKU','MSCU','CMAU','HLXU','ONE'][Math.floor(Math.random()*5)]}${Math.floor(Math.random()*9000000+1000000)}` : null;
+      ships.push({
+        id: id, bl, container,
+        origin:l.o, destination:l.d, mode:l.mode,
+        carrier: carrier.code, inco: INCOTERMS[Math.floor(Math.random()*INCOTERMS.length)],
+        teu, value, cost:+cost.toFixed(2),
+        hs: HS_CODES[Math.floor(Math.random()*HS_CODES.length)],
+        desc: pickDesc(), weight: Math.floor((teu||1)*Math.random()*15000+5000),
+        etd: etd.toISOString().split('T')[0],
+        eta: eta.toISOString().split('T')[0],
+        status, progress,
+        co2: calcCO2(teu||1, l.days, l.mode)
+      });
+    }
+  });
+  return ships;
+}
+
+function pickDesc(){
+  const d = ['Consumer electronics','Solar panels','Auto parts','Furniture','Medical devices','Textiles','Machinery','Semiconductors','Household appliances','Chemical compounds'];
+  return d[Math.floor(Math.random()*d.length)];
+}
+function pickStatus(eta){
+  const now = Date.now();
+  const r = Math.random();
+  if (eta.getTime() < now) return r<0.85?'Delivered':'Delayed';
+  const daysTo = (eta.getTime()-now)/86400000;
+  if (daysTo>20) return Math.random()<.7?'In Transit':'Booked';
+  if (daysTo>5) return Math.random()<.85?'In Transit':'Customs Hold';
+  return Math.random()<.1?'Delayed':'In Transit';
+}
+function calcProgress(etd,eta,status){
+  if (status==='Delivered') return 100;
+  if (status==='Booked') return 5;
+  const now = Date.now();
+  const total = eta.getTime()-new Date(etd).getTime();
+  const elapsed = now - new Date(etd).getTime();
+  return Math.min(95, Math.max(10, Math.round((elapsed/total)*100)));
+}
+function calcCO2(teu,days,mode){
+  // Approx kg CO2 per TEU-day
+  const factor = {'Ocean FCL':30,'Ocean LCL':45,'Air Freight':900,'Road':120,'Rail':40}[mode]||30;
+  return Math.round(teu*days*factor/1000*10)/10; // tons
+}
+
+/* ============ UTILS ============ */
+const portMap = Object.fromEntries(PORTS.map(p=>[p.code,p]));
+const carrierMap = Object.fromEntries(CARRIERS.map(c=>[c.code,c]));
+const fmtMoney = v => {
+  const converted = v * FX[currentCCY];
+  const sym = {USD:'$',EUR:'€',BRL:'R$'}[currentCCY];
+  return sym + converted.toLocaleString('en-US',{maximumFractionDigits:0});
+};
+const fmtNum = v => v.toLocaleString('en-US');
+const daysBetween = (a,b) => Math.round((new Date(b)-new Date(a))/86400000);
+const toast = (msg,type='ok')=>{
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show '+type;
+  setTimeout(()=>t.className='toast',3200);
+};
+const goto = (p) => {
+  document.querySelector(`.nav-item[data-page="${p}"]`).click();
+};
+
+/* ============ NAV ============ */
+document.querySelectorAll('.nav-item').forEach(it=>{
+  it.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    it.classList.add('active');
+    const p = it.dataset.page;
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    document.getElementById('page-'+p).classList.add('active');
+    render(p);
+  });
+});
+
+/* ============ CURRENCY ============ */
+document.querySelectorAll('#currencySwitch button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#currencySwitch button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    currentCCY = b.dataset.ccy;
+    renderAll();
+  });
+});
+
+/* ============ POPULATE FORM SELECTS ============ */
+function populateSelect(id,items,display,firstOpt){
+  const sel = document.getElementById(id);
+  sel.innerHTML = firstOpt ? `<option value="">${firstOpt}</option>` : '';
+  items.forEach(i=>{
+    const opt = document.createElement('option');
+    opt.value = typeof i === 'string' ? i : i.code;
+    opt.textContent = typeof i === 'string' ? i : display(i);
+    sel.appendChild(opt);
+  });
+}
+populateSelect('f-carrier', CARRIERS, c=>`${c.code} — ${c.name}`);
+populateSelect('f-origin', PORTS, p=>`${p.code} — ${p.name}`);
+populateSelect('f-dest', PORTS, p=>`${p.code} — ${p.name}`);
+populateSelect('fltCarrier', CARRIERS, c=>`${c.code} — ${c.name}`, 'All carriers');
+document.getElementById('f-etd').valueAsDate = new Date();
+const etaDef = new Date(); etaDef.setDate(etaDef.getDate()+30);
+document.getElementById('f-eta').valueAsDate = etaDef;
+
+/* ============ FORM SUBMIT ============ */
+document.getElementById('formShip').addEventListener('submit',e=>{
+  e.preventDefault();
+  const ships = loadShips();
+  const origin = document.getElementById('f-origin').value;
+  const dest = document.getElementById('f-dest').value;
+  const mode = document.getElementById('f-mode').value;
+  const teu = +document.getElementById('f-teu').value;
+  const etd = document.getElementById('f-etd').value;
+  const eta = document.getElementById('f-eta').value;
+  const cost = +document.getElementById('f-cost').value;
+  const ship = {
+    id: Date.now(),
+    bl: (document.getElementById('f-carrier').value).substring(0,4).toUpperCase() + Date.now().toString().slice(-7),
+    container: mode.includes('Ocean') ? `${['MSKU','MSCU','CMAU'][Math.floor(Math.random()*3)]}${Math.floor(Math.random()*9000000+1000000)}` : null,
+    origin, destination:dest, mode,
+    carrier: document.getElementById('f-carrier').value,
+    inco: document.getElementById('f-inco').value,
+    teu, value: +document.getElementById('f-value').value,
+    cost, hs: document.getElementById('f-hs').value,
+    desc: document.getElementById('f-desc').value || 'General cargo',
+    weight: +document.getElementById('f-weight').value || 0,
+    etd, eta, status:'Booked', progress:5,
+    co2: calcCO2(teu||1, daysBetween(etd,eta), mode)
+  };
+  ships.push(ship); saveShips(ships);
+  toast(`✅ Shipment booked — BL ${ship.bl}`,'ok');
+  e.target.reset();
+  document.getElementById('f-etd').valueAsDate = new Date();
+  document.getElementById('f-eta').valueAsDate = etaDef;
+  renderAll();
+});
+
+/* ============ RENDERERS ============ */
+function renderAll(){ ['dashboard','shipments','routes','carriers','warehouses','docs','analytics'].forEach(render); }
+function render(p){
+  if (p==='dashboard') renderDash();
+  if (p==='shipments') renderShips();
+  if (p==='routes') renderRoutes();
+  if (p==='carriers') renderCarriers();
+  if (p==='warehouses') renderWH();
+  if (p==='docs') renderDocs();
+  if (p==='analytics') renderAnalytics();
+  document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+}
+
+let charts = {};
+function destroy(key){ if(charts[key]){charts[key].destroy();delete charts[key];} }
+
+function renderDash(){
+  const ships = loadShips();
+  const active = ships.filter(s=>s.status!=='Delivered');
+  const teu = ships.reduce((s,x)=>s+(x.teu||0),0);
+  const cost = ships.reduce((s,x)=>s+x.cost,0);
+  const co2 = ships.reduce((s,x)=>s+(x.co2||0),0);
+  const delivered = ships.filter(s=>s.status==='Delivered');
+  const onTime = delivered.filter(s=>daysBetween(s.etd,s.eta)<=Math.round((new Date(s.eta)-new Date(s.etd))/86400000*1.1)).length;
+  const otif = delivered.length ? Math.round((onTime/delivered.length)*100) : 0;
+  const avgTransit = Math.round(ships.reduce((s,x)=>s+daysBetween(x.etd,x.eta),0)/Math.max(ships.length,1));
+
+  document.getElementById('kpiActive').textContent = fmtNum(active.length);
+  document.getElementById('kpiTEU').textContent = fmtNum(teu);
+  document.getElementById('kpiOTIF').textContent = otif+'%';
+  document.getElementById('kpiTransit').textContent = avgTransit+' d';
+  document.getElementById('kpiCost').textContent = fmtMoney(cost);
+  document.getElementById('kpiCostMeta').textContent = `In ${currentCCY}`;
+  document.getElementById('kpiCO2').textContent = fmtNum(co2)+' t';
+  document.getElementById('badge-active').textContent = active.length;
+
+  // Lanes chart
+  const byLane = {};
+  ships.forEach(s=>{
+    const k = `${portMap[s.origin].code} → ${portMap[s.destination].code}`;
+    byLane[k] = (byLane[k]||0) + (s.teu||1);
+  });
+  const sorted = Object.entries(byLane).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  destroy('lanes');
+  charts.lanes = new Chart(document.getElementById('chartLanes'),{
+    type:'bar',
+    data:{labels:sorted.map(x=>x[0]),datasets:[{data:sorted.map(x=>x[1]),backgroundColor:'#06b6d4',borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6b7280'},grid:{color:'#1f2937'}},y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{display:false}}}}
+  });
+
+  // Mode
+  const byMode = {};
+  ships.forEach(s=>byMode[s.mode]=(byMode[s.mode]||0)+1);
+  destroy('mode');
+  charts.mode = new Chart(document.getElementById('chartMode'),{
+    type:'doughnut',
+    data:{labels:Object.keys(byMode),datasets:[{data:Object.values(byMode),backgroundColor:['#06b6d4','#3b82f6','#f59e0b','#10b981','#a855f7'],borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10},padding:10}}}}
+  });
+
+  // Incoterms
+  const byInco = {};
+  ships.forEach(s=>byInco[s.inco]=(byInco[s.inco]||0)+1);
+  destroy('inco');
+  charts.inco = new Chart(document.getElementById('chartInco'),{
+    type:'polarArea',
+    data:{labels:Object.keys(byInco),datasets:[{data:Object.values(byInco),backgroundColor:['#06b6d4aa','#3b82f6aa','#10b981aa','#f59e0baa','#a855f7aa','#ef4444aa']}]},
+    options:{plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10}}}}}
+  });
+
+  // Top carriers
+  const byCarr = {};
+  ships.forEach(s=>{
+    if(!byCarr[s.carrier]) byCarr[s.carrier] = {count:0,teu:0,otif:[]};
+    byCarr[s.carrier].count++;
+    byCarr[s.carrier].teu += s.teu||0;
+    if(s.status==='Delivered') byCarr[s.carrier].otif.push(1);
+  });
+  const topC = Object.entries(byCarr).sort((a,b)=>b[1].count-a[1].count).slice(0,5);
+  document.getElementById('topCarriers').innerHTML = topC.map(([k,v])=>{
+    const c = carrierMap[k];
+    return `<div class="carrier">
+      <div class="carrier-logo">${c.code.substring(0,3)}</div>
+      <div class="carrier-info"><h4>${c.name}</h4><p>${c.mode}</p></div>
+      <div class="carrier-stats">
+        <div><strong>${v.count}</strong><span>Ships</span></div>
+        <div><strong>${v.teu}</strong><span>TEU</span></div>
+        <div><strong>${c.onTime}%</strong><span>OTD</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Alerts
+  const alerts = [];
+  ships.filter(s=>s.status==='Delayed').forEach(s=>alerts.push({crit:true,ico:'⚠️',title:`Delay: ${s.bl}`,desc:`${portMap[s.origin].name} → ${portMap[s.destination].name}`,meta:`ETA ${s.eta}`}));
+  ships.filter(s=>s.status==='Customs Hold').forEach(s=>alerts.push({crit:false,ico:'🛃',title:`Customs hold: ${s.bl}`,desc:`HS ${s.hs}`,meta:`Waiting clearance`}));
+  ships.filter(s=>s.status==='In Transit' && daysBetween(new Date().toISOString().split('T')[0],s.eta)<3).forEach(s=>alerts.push({crit:false,ico:'🔔',title:`Arriving soon: ${s.bl}`,desc:`ETA ${s.eta}`,meta:`${portMap[s.destination].name}`}));
+  document.getElementById('alertCount').textContent = alerts.length;
+  document.getElementById('alertsList').innerHTML = alerts.length ? alerts.slice(0,6).map(a=>`
+    <div class="alert-item ${a.crit?'crit':''}">
+      <div class="ico">${a.ico}</div>
+      <div style="flex:1"><strong>${a.title}</strong><div>${a.desc}</div><div class="meta">${a.meta}</div></div>
+    </div>
+  `).join('') : '<div class="empty">✅ No active alerts</div>';
+}
+
+function renderShips(){
+  const ships = loadShips();
+  const fs = document.getElementById('fltStatus').value;
+  const fm = document.getElementById('fltMode').value;
+  const fc = document.getElementById('fltCarrier').value;
+  const ft = document.getElementById('fltSearch').value.toLowerCase();
+  const filtered = ships.filter(s=>
+    (!fs||s.status===fs)&&(!fm||s.mode===fm)&&(!fc||s.carrier===fc)&&
+    (!ft||s.bl.toLowerCase().includes(ft)||s.container?.toLowerCase().includes(ft)||s.hs.includes(ft)||s.desc.toLowerCase().includes(ft))
+  ).sort((a,b)=>new Date(b.etd)-new Date(a.etd));
+
+  const tbody = document.getElementById('tbodyShips');
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="11" class="empty">No shipments match filters</td></tr>';return;}
+  tbody.innerHTML = filtered.map(s=>{
+    const o = portMap[s.origin], d = portMap[s.destination], c = carrierMap[s.carrier];
+    const stClass = s.status==='Delivered'?'ok':s.status==='Delayed'||s.status==='Customs Hold'?'err':s.status==='In Transit'?'info':'warn';
+    const progressClass = s.status==='Delayed'?'late':s.status==='In Transit'?'active':'done';
+    return `<tr onclick="openShip(${s.id})" style="cursor:pointer">
+      <td><strong style="color:var(--accent);font-family:monospace">${s.bl}</strong><div style="font-size:10px;color:var(--text-mute);font-family:monospace">${s.container||'—'}</div></td>
+      <td><div style="font-weight:600">${o.code} → ${d.code}</div><div style="font-size:10px;color:var(--text-mute)">${o.name.split(',')[0]} → ${d.name.split(',')[0]}</div></td>
+      <td><span class="pill mute">${s.mode}</span></td>
+      <td>${c.name}</td>
+      <td><span class="pill info">${s.inco}</span></td>
+      <td><strong>${s.teu||'—'}</strong></td>
+      <td>${fmtMoney(s.value)}</td>
+      <td style="min-width:220px">
+        <div class="milestones">
+          <div class="ms ${s.progress>=20?'done':''}"></div>
+          <div class="ms ${s.progress>=40?'done':s.progress>=30?progressClass:''}"></div>
+          <div class="ms ${s.progress>=70?'done':s.progress>=50?progressClass:''}"></div>
+          <div class="ms ${s.progress>=95?'done':s.progress>=80?progressClass:''}"></div>
+          <div class="ms ${s.progress>=100?'done':''}"></div>
+        </div>
+        <div class="ms-labels"><span>Book</span><span>PU</span><span>Transit</span><span>Customs</span><span>DEL</span></div>
+      </td>
+      <td>${s.eta}</td>
+      <td><span class="pill ${stClass}">${s.status}</span></td>
+      <td><button class="btn" onclick="event.stopPropagation();delShip(${s.id})">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+['fltStatus','fltMode','fltCarrier'].forEach(id=>document.getElementById(id).addEventListener('change',renderShips));
+document.getElementById('fltSearch').addEventListener('input',renderShips);
+document.getElementById('globalSearch').addEventListener('input',e=>{
+  document.getElementById('fltSearch').value = e.target.value;
+  goto('shipments'); renderShips();
+});
+
+function delShip(id){
+  if(!confirm('Cancel this shipment?')) return;
+  saveShips(loadShips().filter(s=>s.id!==id));
+  toast('🗑 Shipment cancelled','ok'); renderAll();
+}
+
+function openShip(id){
+  const s = loadShips().find(x=>x.id===id); if(!s) return;
+  const o=portMap[s.origin],d=portMap[s.destination],c=carrierMap[s.carrier];
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><h3 style="font-size:18px">${s.bl}</h3><div style="font-size:11px;color:var(--text-mute);font-family:monospace">${s.container||'N/A'}</div></div>
+      <span class="pill ${s.status==='Delivered'?'ok':s.status==='Delayed'?'err':'info'}" style="font-size:11px">${s.status}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="route">
+        <div class="ports">
+          <div class="port"><span class="code">${o.code}</span><span class="name">${o.name}</span></div>
+          <div style="flex:1;margin:0 10px">→</div>
+          <div class="port"><span class="code">${d.code}</span><span class="name">${d.name}</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">Mode</div><div style="font-weight:600;margin-top:4px">${s.mode}</div></div>
+      <div class="kpi blue"><div class="kpi-label">Carrier</div><div style="font-weight:600;margin-top:4px">${c.name}</div></div>
+      <div class="kpi green"><div class="kpi-label">Incoterm</div><div style="font-weight:600;margin-top:4px">${s.inco}</div></div>
+      <div class="kpi amber"><div class="kpi-label">TEUs</div><div style="font-weight:600;margin-top:4px">${s.teu||'—'}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div><div style="font-size:10px;color:var(--text-mute);text-transform:uppercase">Cargo Value</div><div style="font-weight:700;font-size:15px">${fmtMoney(s.value)}</div></div>
+      <div><div style="font-size:10px;color:var(--text-mute);text-transform:uppercase">Freight Cost</div><div style="font-weight:700;font-size:15px;color:var(--accent)">${fmtMoney(s.cost)}</div></div>
+      <div><div style="font-size:10px;color:var(--text-mute);text-transform:uppercase">CO₂</div><div style="font-weight:700;font-size:15px">${s.co2} t</div></div>
+    </div>
+    <div style="background:var(--bg-0);padding:12px;border-radius:8px;font-size:12px;margin-bottom:14px">
+      <div><strong>Description:</strong> ${s.desc}</div>
+      <div><strong>HS Code:</strong> <span class="tag">${s.hs}</span></div>
+      <div><strong>Gross Weight:</strong> ${fmtNum(s.weight)} kg</div>
+      <div><strong>ETD:</strong> ${s.etd} &nbsp;&nbsp; <strong>ETA:</strong> ${s.eta} &nbsp;&nbsp; <strong>Transit:</strong> ${daysBetween(s.etd,s.eta)} days</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="document.getElementById('modal').classList.remove('show')">Close</button>
+    </div>`;
+  document.getElementById('modal').classList.add('show');
+}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')e.target.classList.remove('show');});
+
+function renderRoutes(){
+  const ships = loadShips();
+  const byLane = {};
+  ships.forEach(s=>{
+    const k = `${s.origin}|${s.destination}|${s.mode}`;
+    if(!byLane[k]) byLane[k] = {o:s.origin,d:s.destination,mode:s.mode,count:0,teu:0,cost:0,transit:[]};
+    byLane[k].count++;
+    byLane[k].teu += s.teu||0;
+    byLane[k].cost += s.cost;
+    byLane[k].transit.push(daysBetween(s.etd,s.eta));
+  });
+  const lanes = Object.values(byLane).map(l=>({...l,avg:Math.round(l.transit.reduce((a,b)=>a+b,0)/l.transit.length),costPerTEU:l.teu?l.cost/l.teu:l.cost})).sort((a,b)=>b.teu-a.teu);
+
+  document.getElementById('kpiLanes').textContent = lanes.length;
+  if(lanes.length){
+    const b = lanes[0];
+    document.getElementById('kpiBusiest').textContent = `${portMap[b.o].code}→${portMap[b.d].code}`;
+    document.getElementById('kpiBusiestMeta').textContent = `${b.count} shipments · ${b.teu} TEU`;
+    document.getElementById('kpiAvgTEU').textContent = fmtMoney(Math.round(lanes.reduce((s,l)=>s+l.costPerTEU,0)/lanes.length));
+  }
+
+  document.getElementById('routesList').innerHTML = lanes.map(l=>{
+    const o=portMap[l.o],d=portMap[l.d];
+    const p = Math.min(100,(l.count/Math.max(...lanes.map(x=>x.count)))*100);
+    return `<div class="route">
+      <div class="ports">
+        <div class="port"><span class="code">${o.code}</span><span class="name">${o.name}</span></div>
+        <div class="route-line" style="--p:${p}%"></div>
+        <div class="port"><span class="code">${d.code}</span><span class="name">${d.name}</span></div>
+      </div>
+      <div class="route-meta">
+        <div><strong>${l.count}</strong> <span>ships</span></div>
+        <div><strong>${l.teu}</strong> <span>TEU</span></div>
+        <div><strong>${l.avg}d</strong> <span>avg transit</span></div>
+        <div><strong>${fmtMoney(l.costPerTEU)}</strong> <span>/TEU</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCarriers(){
+  const ships = loadShips();
+  const stats = CARRIERS.map(c=>{
+    const cs = ships.filter(s=>s.carrier===c.code);
+    const teu = cs.reduce((s,x)=>s+(x.teu||0),0);
+    const vol = cs.reduce((s,x)=>s+x.cost,0);
+    const active = cs.filter(x=>x.status!=='Delivered').length;
+    return {...c,ships:cs.length,teu,volume:vol,active};
+  }).sort((a,b)=>b.volume-a.volume);
+  document.getElementById('carriersList').innerHTML = stats.map(c=>`
+    <div class="carrier">
+      <div class="carrier-logo">${c.code.substring(0,3)}</div>
+      <div class="carrier-info"><h4>${c.name}</h4><p>${c.code} · ${c.mode}</p></div>
+      <div class="carrier-stats">
+        <div><strong>${c.ships}</strong><span>Ships</span></div>
+        <div><strong>${c.active}</strong><span>Active</span></div>
+        <div><strong>${c.teu}</strong><span>TEU</span></div>
+        <div><strong>${fmtMoney(c.volume)}</strong><span>Vol</span></div>
+        <div><strong>${c.onTime}%</strong><span>OTD</span></div>
+        <div><strong>★${c.rating}</strong><span>Rating</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderWH(){
+  // Simulated global DC network
+  const whs = [
+    {code:'CDC-SH-01',name:'Shanghai Distribution Hub',city:'Shanghai, CN',cap:50000,occ:42300,thr:1240,type:'Bonded'},
+    {code:'CDC-RT-02',name:'Rotterdam Europort DC',city:'Rotterdam, NL',cap:38000,occ:31500,thr:980,type:'Bonded'},
+    {code:'CDC-LA-03',name:'LA Gateway DC',city:'Los Angeles, US',cap:45000,occ:38900,thr:1450,type:'FTZ'},
+    {code:'CDC-SS-04',name:'Santos BR Logistics Park',city:'Santos, BR',cap:25000,occ:18200,thr:720,type:'General'},
+    {code:'CDC-SG-05',name:'Singapore Asia Hub',city:'Singapore, SG',cap:42000,occ:35100,thr:1180,type:'Bonded'},
+    {code:'CDC-JA-06',name:'Jebel Ali Free Zone',city:'Dubai, AE',cap:30000,occ:22500,thr:850,type:'FTZ'},
+    {code:'CDC-HH-07',name:'Hamburg North DC',city:'Hamburg, DE',cap:28000,occ:20100,thr:690,type:'General'},
+    {code:'CDC-NY-08',name:'NYC Metro DC',city:'New York, US',cap:32000,occ:28400,thr:1020,type:'FTZ'}
+  ];
+  document.getElementById('whList').innerHTML = whs.map(w=>{
+    const p = Math.round(w.occ/w.cap*100);
+    const color = p>90?'var(--danger)':p>75?'var(--warn)':'var(--ok)';
+    return `<div class="wh">
+      <div class="wh-head">
+        <div><h4>${w.name}</h4><div style="font-size:11px;color:var(--text-mute);margin-top:2px">${w.city}</div></div>
+        <div class="code">${w.code}</div>
+      </div>
+      <div class="wh-meta">
+        <div><span>Type:</span> <strong>${w.type}</strong></div>
+        <div><span>Capacity:</span> <strong>${fmtNum(w.cap)} pallets</strong></div>
+        <div><span>Occupancy:</span> <strong style="color:${color}">${fmtNum(w.occ)} (${p}%)</strong></div>
+        <div><span>Throughput:</span> <strong>${fmtNum(w.thr)} pallets/day</strong></div>
+      </div>
+      <div class="wh-bar"><div class="wh-bar-fill" style="width:${p}%;background:${color}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderDocs(){
+  const ships = loadShips();
+  const docs = [];
+  ships.forEach(s=>{
+    docs.push({type:'Bill of Lading',num:`BL-${s.bl}`,ship:s.bl,hs:s.hs,date:s.etd,status:s.status==='Delivered'?'Executed':'Active'});
+    docs.push({type:'Commercial Invoice',num:`CI-${s.id}`,ship:s.bl,hs:s.hs,date:s.etd,status:'Validated'});
+    docs.push({type:'Packing List',num:`PL-${s.id}`,ship:s.bl,hs:s.hs,date:s.etd,status:'Validated'});
+    if(s.mode==='Air Freight') docs.push({type:'Air Waybill',num:`AWB-${s.bl}`,ship:s.bl,hs:s.hs,date:s.etd,status:s.status==='Delivered'?'Executed':'Active'});
+    if(['CIF','DAP','DDP'].includes(s.inco)) docs.push({type:'Certificate of Origin',num:`CO-${s.id}`,ship:s.bl,hs:s.hs,date:s.etd,status:'Validated'});
+  });
+  document.getElementById('tbodyDocs').innerHTML = docs.slice(0,50).map(d=>`
+    <tr>
+      <td><strong style="font-family:monospace;color:var(--accent)">${d.num}</strong></td>
+      <td><span class="pill mute">${d.type}</span></td>
+      <td>${d.ship}</td>
+      <td><span class="tag">${d.hs}</span></td>
+      <td>${d.date}</td>
+      <td><span class="pill ${d.status==='Executed'?'ok':'info'}">${d.status}</span></td>
+    </tr>`).join('');
+}
+
+function renderAnalytics(){
+  const ships = loadShips();
+  // CO2 by mode
+  const co2ByMode = {};
+  ships.forEach(s=>{co2ByMode[s.mode]=(co2ByMode[s.mode]||0)+(s.co2||0);});
+  destroy('co2');
+  charts.co2 = new Chart(document.getElementById('chartCO2'),{
+    type:'bar',
+    data:{labels:Object.keys(co2ByMode),datasets:[{data:Object.values(co2ByMode),backgroundColor:['#06b6d4','#3b82f6','#f59e0b','#10b981','#a855f7'],borderRadius:6}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#6b7280'},grid:{color:'#1f2937'}},x:{ticks:{color:'#9ca3af'},grid:{display:false}}}}
+  });
+
+  // Cost trend (90d simulated)
+  const trend = Array.from({length:12},(_,i)=>{
+    const d = new Date(); d.setDate(d.getDate()-90+i*7);
+    return {d:d.toISOString().split('T')[0], v: Math.round(ships.reduce((s,x)=>s+x.cost,0)/12*(0.8+Math.random()*0.4))};
+  });
+  destroy('trend');
+  charts.trend = new Chart(document.getElementById('chartTrend'),{
+    type:'line',
+    data:{labels:trend.map(x=>x.d),datasets:[{data:trend.map(x=>x.v),borderColor:'#06b6d4',backgroundColor:'rgba(6,182,212,.1)',tension:.3,fill:true,pointRadius:3}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#6b7280',callback:v=>'$'+(v/1000).toFixed(0)+'k'},grid:{color:'#1f2937'}},x:{ticks:{color:'#6b7280',maxRotation:45},grid:{display:false}}}}
+  });
+
+  // OTIF by carrier
+  const otif = CARRIERS.slice(0,8).map(c=>({n:c.name,v:c.onTime+Math.round((Math.random()-0.5)*6)}));
+  destroy('otif');
+  charts.otif = new Chart(document.getElementById('chartOTIF'),{
+    type:'bar',
+    data:{labels:otif.map(x=>x.n),datasets:[{data:otif.map(x=>x.v),backgroundColor:otif.map(x=>x.v>=90?'#10b981':x.v>=85?'#f59e0b':'#ef4444'),borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:70,max:100,ticks:{color:'#6b7280',callback:v=>v+'%'},grid:{color:'#1f2937'}},y:{ticks:{color:'#9ca3af',font:{size:10}},grid:{display:false}}}}
+  });
+
+  // Delay root causes
+  const causes = [{l:'Port Congestion',v:35},{l:'Customs Hold',v:22},{l:'Weather',v:15},{l:'Equipment Shortage',v:12},{l:'Documentation',v:9},{l:'Other',v:7}];
+  destroy('delay');
+  charts.delay = new Chart(document.getElementById('chartDelay'),{
+    type:'doughnut',
+    data:{labels:causes.map(x=>x.l),datasets:[{data:causes.map(x=>x.v),backgroundColor:['#ef4444','#f59e0b','#3b82f6','#06b6d4','#a855f7','#6b7280'],borderWidth:0}]},
+    options:{plugins:{legend:{position:'bottom',labels:{color:'#9ca3af',font:{size:10},padding:8}}}}
+  });
+}
+
+/* ============ ACTIONS ============ */
+function syncData(){
+  toast('🔄 Data synced with carrier APIs','ok');
+  renderAll();
+}
+function exportData(){
+  const ships = loadShips();
+  const csv = 'BL,Origin,Destination,Mode,Carrier,Incoterm,TEU,Value,Cost,Status,ETD,ETA\n'+
+    ships.map(s=>`${s.bl},${portMap[s.origin].name},${portMap[s.destination].name},${s.mode},${carrierMap[s.carrier].name},${s.inco},${s.teu},${s.value},${s.cost},${s.status},${s.etd},${s.eta}`).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='shipments.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('📥 Exported to CSV','ok');
+}
+function resetSystem(){
+  if(!confirm('Reset all data to realistic seed?')) return;
+  localStorage.removeItem(KEY);
+  toast('♻️ System reset','ok');
+  setTimeout(()=>location.reload(),800);
+}
+
+/* ============ INIT ============ */
+renderAll();
+</script>
+</body>
+</html>
